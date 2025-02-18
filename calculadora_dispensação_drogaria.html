@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Aproveitamento de Receita</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fae7d1;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #000000;
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .form-section {
+            width: 45%;
+            padding: 20px;
+            background-color: #fdf7f2;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+
+        input, select, button {
+            width: 85%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .result-section {
+            width: 45%;
+            padding: 20px;
+            background-color: #fff9f1;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-section h2 {
+            margin-bottom: 20px;
+            color: #000000;
+        }
+
+        .result-section p {
+            font-size: 18px;
+            color: #000;
+        }
+
+        .highlight {
+            color: red;
+            font-weight: bold;
+        }
+
+        .footer {
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        .footer img {
+            max-width: 100px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Calculadora de Aproveitamento de Receita</h1>
+
+    <div class="container">
+        <div class="form-section">
+            <label for="cpPorDia">Comprimidos por dia:</label>
+            <input type="number" id="cpPorDia" step="0.01" min="0.01" placeholder="Ex: 2.5">
+
+            <label for="tipoNotificacao">Tipo de notificação:</label>
+            <select id="tipoNotificacao" onchange="atualizarMaxDias()">
+                <option value="">Selecione</option>
+                <option value="A">A (Receita Amarela)</option>
+                <option value="A2">A2 (Receita Amarela - Substâncias Entorpecentes)</option>
+                <option value="B1">B1 (Receita Azul - Medicamentos Psicotrópicos)</option>
+                <option value="B2">B2 (Receita Azul - Medicamentos Psicotrópicos Anorexígenos)</option>
+                <option value="ATB">ATB (Antimicrobianos)</option>
+                <option value="C1">C1 (Controle Especial)</option>
+            </select>
+
+            <label for="limitante">Limitante:</label>
+            <select id="limitante" onchange="ativarUsoContinuo()">
+                <option value="">Selecione</option>
+                <option value="uso_continuo">Uso Contínuo</option>
+                <option value="caixas">Caixas</option>
+                <option value="comprimidos">Comprimidos</option>
+            </select>
+
+            <label for="quantidadeMaxima">Quantidade máxima por mês:</label>
+            <input type="number" id="quantidadeMaxima" step="0.01" min="0.01" placeholder="Ex: 240">
+
+            <label for="cpPorCaixa">Quantidade de comprimidos por caixa:</label>
+            <input type="number" id="cpPorCaixa" step="0.01" min="0.01" placeholder="Ex: 30">
+
+            <label for="quantidadeCaixas">Quantidade de caixas permitidas na receita:</label>
+            <input type="number" id="quantidadeCaixas" step="0.01" min="0.01" placeholder="Ex: 10">
+
+            <button type="button" onclick="calcular()">Calcular</button>
+            <button type="button" onclick="limpar()">Limpar</button>
+        </div>
+
+        <div class="result-section">
+            <h2>CÁLCULO</h2>
+            <p id="resultado">Você pode vender até <span class="highlight">0</span> caixas de <span class="highlight">0</span> comprimidos e <span class="highlight">0</span> comprimidos extras. A receita cobrirá <span class="highlight">0</span> ciclos de 30 dias.</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <img src="https://i.pinimg.com/originals/bb/a7/5b/bba75b2c0195dff46086dd187249b371.png" alt="Imagem" class="bg-image">
+    </div>
+
+    <script>
+        let maxDias = 60; // Valor padrão para tipos de notificação que permitem até 60 dias
+
+        function atualizarMaxDias() {
+            const tipoNotificacao = document.getElementById('tipoNotificacao').value;
+            if (['A', 'A2', 'B2'].includes(tipoNotificacao)) {
+                maxDias = 30;
+            } else if (tipoNotificacao === 'C1') {
+                maxDias = 60;
+            } else {
+                maxDias = 60;
+            }
+        }
+
+        function ativarUsoContinuo() {
+            const limitante = document.getElementById('limitante').value;
+            const quantidadeMaxima = document.getElementById('quantidadeMaxima');
+            const quantidadeCaixas = document.getElementById('quantidadeCaixas');
+
+            if (limitante === 'uso_continuo') {
+                quantidadeMaxima.value = (maxDias * parseFloat(document.getElementById('cpPorDia').value)).toFixed(2);
+                quantidadeMaxima.disabled = true; // Desativa o campo
+                quantidadeCaixas.disabled = true; // Desativa o campo
+            } else if (limitante === 'caixas') {
+                quantidadeMaxima.disabled = true; // Desativa o campo
+                quantidadeCaixas.disabled = false; // Ativa o campo de caixas
+            } else {
+                quantidadeMaxima.disabled = false; // Ativa o campo se não for uso contínuo
+                quantidadeCaixas.disabled = true; // Desativa o campo de caixas
+            }
+        }
+
+        function calcular() {
+            const cpPorDia = parseFloat(document.getElementById('cpPorDia').value);
+            const tipoNotificacao = document.getElementById('tipoNotificacao').value;
+            const limitante = document.getElementById('limitante').value;
+            const quantidadeMaxima = parseFloat(document.getElementById('quantidadeMaxima').value);
+            const cpPorCaixa = parseFloat(document.getElementById('cpPorCaixa').value);
+            const quantidadeCaixas = parseFloat(document.getElementById('quantidadeCaixas').value);
+
+            if (isNaN(cpPorDia) || !tipoNotificacao || !limitante || (limitante !== 'caixas' && isNaN(quantidadeMaxima)) || isNaN(cpPorCaixa) || (limitante === 'caixas' && isNaN(quantidadeCaixas))) {
+                alert('Preencha todos os campos corretamente.');
+                return;
+            }
+
+            if (maxDias === 30 && limitante === 'caixas') {
+                // Limita a quantidade a ser vendida para 30 comprimidos, correspondente a um ciclo de 30 dias
+                const comprimidosNecessarios = cpPorDia * 30; // Comprimidos necessários para 30 dias
+                const maxComprimidosPermitidos = Math.min(comprimidosNecessarios, quantidadeCaixas * cpPorCaixa);
+
+                // Cálculo de quantas caixas e comprimidos extras podem ser vendidos
+                const maxCaixas = Math.floor(maxComprimidosPermitidos / cpPorCaixa);
+                const comprimidosRestantes = maxComprimidosPermitidos % cpPorCaixa;
+
+                document.getElementById('resultado').innerHTML = `Você pode vender até <span class="highlight">${maxCaixas}</span> caixas de <span class="highlight">${cpPorCaixa}</span> comprimidos e <span class="highlight">${comprimidosRestantes}</span> comprimidos extras. A receita cobrirá <span class="highlight">1</span> ciclo de 30 dias.`;
+            } else {
+                // Cálculo baseado na quantidade máxima por mês
+                const totalComprimidos = cpPorDia * maxDias;
+                const maxComprimidosPermitidos = quantidadeMaxima;
+                const comprimidosVendidos = Math.min(totalComprimidos, maxComprimidosPermitidos);
+
+                // Cálculo de quantas caixas e comprimidos extras podem ser vendidos
+                const maxCaixas = Math.floor(comprimidosVendidos / cpPorCaixa);
+                const comprimidosRestantes = comprimidosVendidos % cpPorCaixa;
+
+                // Cálculo de quantos ciclos a receita cobrirá
+                const ciclos = Math.floor(comprimidosVendidos / (cpPorDia * 30));
+
+                document.getElementById('resultado').innerHTML = `Você pode vender até <span class="highlight">${maxCaixas}</span> caixas de <span class="highlight">${cpPorCaixa}</span> comprimidos e <span class="highlight">${comprimidosRestantes}</span> comprimidos extras. A receita cobrirá <span class="highlight">${ciclos}</span> ciclo(s) de 30 dias.`;
+            }
+        }
+
+        function limpar() {
+            document.getElementById('cpPorDia').value = '';
+            document.getElementById('tipoNotificacao').value = '';
+            document.getElementById('limitante').value = '';
+            document.getElementById('quantidadeMaxima').value = '';
+            document.getElementById('cpPorCaixa').value = '';
+            document.getElementById('quantidadeCaixas').value = '';
+            document.getElementById('resultado').innerHTML = 'Você pode vender até <span class="highlight">0</span> caixas de <span class="highlight">0</span> comprimidos e <span class="highlight">0</span> comprimidos extras. A receita cobrirá <span class="highlight">0</span> ciclos de 30 dias.';
+        }
+    </script>
+
+</body>
+</html>
